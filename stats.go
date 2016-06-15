@@ -6,7 +6,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/deep-compute/atomicbool"
+	"github.com/deep-compute/abool"
 	"github.com/quipo/statsd"
 	"os"
 	"regexp"
@@ -123,8 +123,8 @@ type Stats struct {
 	Prefix string
 
 	stats                    *statsd.StatsdBuffer
-	isRuntimeThreadRunning   atomicbool.AtomicBool
-	isProcStatsThreadRunning atomicbool.AtomicBool
+	isRuntimeThreadRunning   *abool.AtomicBool
+	isProcStatsThreadRunning *abool.AtomicBool
 }
 
 // Global singleton stats object
@@ -136,6 +136,9 @@ func (p *Stats) Init() error {
 
 func (p *Stats) init() error {
 	// no stats should be sent
+	p.isRuntimeThreadRunning = abool.New()
+	p.isProcStatsThreadRunning = abool.New()
+
 	if IsDisabled() {
 		noopAllFunctions()
 		return nil
@@ -229,7 +232,7 @@ func (p *Stats) collectRuntimeStats() {
 		if p.stats == nil {
 			nilCount++
 			if nilCount >= 100 {
-				p.isRuntimeThreadRunning.Set(false)
+				p.isRuntimeThreadRunning.SetTo(false)
 				break
 			}
 			continue
@@ -326,7 +329,7 @@ func (p *Stats) collectProcStats() {
 		if p.stats == nil {
 			nilCount++
 			if nilCount >= 100 {
-				p.isProcStatsThreadRunning.Set(false)
+				p.isProcStatsThreadRunning.SetTo(false)
 				break
 			}
 			continue
